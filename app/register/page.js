@@ -1,39 +1,34 @@
-'use client';
-import { useState } from 'react';
+"use client";
 
-export default function Register() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState('');
+import { useState } from "react";
+
+export default function RegisterPage() {
+  const [msg, setMsg] = useState("");
 
   async function handleRegister(e) {
     e.preventDefault();
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+
+    const name = e.target.name.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
     });
 
     const data = await res.json();
-    setMsg(JSON.stringify(data));
+    setMsg(data.error || data.message);
   }
 
   return (
-    <div style={{ padding: 32 }}>
+    <div>
       <h1>Register</h1>
       <form onSubmit={handleRegister}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        /><br/><br/>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        /><br/><br/>
+        <input type="text" name="name" placeholder="Name" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password" required />
         <button type="submit">Register</button>
       </form>
       <p>{msg}</p>

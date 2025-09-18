@@ -1,40 +1,38 @@
-'use client';
-import { useState } from 'react';
+"use client";
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState('');
+import { useState } from "react";
+
+export default function LoginPage() {
+  const [msg, setMsg] = useState("");
 
   async function handleLogin(e) {
     e.preventDefault();
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
-    if (data.token) localStorage.setItem('token', data.token);
-    setMsg(JSON.stringify(data));
+
+    if (res.ok) {
+      localStorage.setItem("token", data.token);
+      setMsg("Login successful!");
+    } else {
+      setMsg(data.error);
+    }
   }
 
   return (
-    <div style={{ padding: 32 }}>
+    <div>
       <h1>Login</h1>
       <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        /><br/><br/>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        /><br/><br/>
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password" required />
         <button type="submit">Login</button>
       </form>
       <p>{msg}</p>

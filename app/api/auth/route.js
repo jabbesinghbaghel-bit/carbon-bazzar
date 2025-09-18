@@ -1,7 +1,7 @@
 import { compare } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-let users = []; // same in-memory array (for simplicity)
+import clientPromise from "@/lib/mongodb";
 const SECRET = 'your-secret-key';
 
 export async function POST(req) {
