@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // app/api/auth/login/route.js
 "use server";
 import clientPromise from "@/lib/mongodb";
