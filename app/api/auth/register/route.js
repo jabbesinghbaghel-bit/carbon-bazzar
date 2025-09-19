@@ -1,22 +1,18 @@
-export const dynamic = "force-dynamic";
+"use server";
+
+// app/api/auth/register/route.js
 import clientPromise from "@/lib/mongodb";
+import bcrypt from "bcrypt";
 
 export async function POST(req) {
   try {
-    const client = await clientPromise;
-    const db = client.db("carbon-bazzar");
-    const users = db.collection("users");
-
     const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return new Response(
-        JSON.stringify({ error: "All fields are required" }),
-        { status: 400 }
-      );
-    }
+    const client = await clientPromise;
+    const db = client.db("carbon-bazzar");
 
-    const existingUser = await users.findOne({ email });
+    const existingUser = await db.collection("users").findOne({ email });
+
     if (existingUser) {
       return new Response(
         JSON.stringify({ error: "User already exists" }),
@@ -24,13 +20,22 @@ export async function POST(req) {
       );
     }
 
-    await users.insertOne({ email, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    return new Response(JSON.stringify({ success: true }), { status: 201 });
-  } catch (err) {
-    console.error("Register error:", err);
+    await db.collection("users").insertOne({
+      email,
+      password: hashedPassword,
+      createdAt: new Date(),
+    });
+
     return new Response(
-      JSON.stringify({ error: "Server error" }),
+      JSON.stringify({ message: "User registered successfully" }),
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Register error:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal Server Error" }),
       { status: 500 }
     );
   }
