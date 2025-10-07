@@ -1,17 +1,16 @@
 export default function Navbar() {
   return (
-    <nav className="bg-[#0B0D17] border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-      {/* Left - Logo + Name */}
-      <div className="flex items-center gap-3">
-        <img
-          src="/logo.png"
-          alt="Carbon Bazzar Logo"
-          className="h-10 w-auto"
-        />
-        <span className="text-2xl font-bold text-white">
-          Carbon<span className="text-green-400">Bazzar</span>
-        </span>
-      </div>
+<nav className="bg-[#0B0D17] border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+  <div className="flex items-center gap-3">
+    <img
+      src="/logo.png"
+      alt="Carbon Bazzar Logo"
+      className="h-12 w-auto max-w-[120px] object-contain"
+    />
+    <span className="text-white text-xl font-semibold">
+      Carbon Bazzar
+    </span>
+  </div>
 
       {/* Right - Menu */}
       <div className="hidden md:flex items-center gap-6 text-gray-300">
