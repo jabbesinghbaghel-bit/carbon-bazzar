@@ -1,56 +1,53 @@
+// app/market/page.js
 "use client";
+
 import { useEffect, useState } from "react";
 
-export default function Market() {
-  const [credits, setCredits] = useState([
-    { symbol: "C1", price: 10, owned: 0 },
-    { symbol: "C2", price: 20, owned: 0 },
-  ]);
+export default function MarketPage() {
+  const [certs, setCerts] = useState([]);
+  const [msg, setMsg] = useState("");
 
-  const buy = (index) => {
-    const symbol = credits[index].symbol;
+  useEffect(() => {
+    fetch("/api/certificates")
+      .then(r => r.json())
+      .then(setCerts)
+      .catch(e => console.error(e));
+  }, []);
+
+  async function buy(id) {
     const token = localStorage.getItem("token");
     if (!token) return alert("Please login first");
 
-    const newCredits = [...credits];
-    newCredits[index].owned += 1;
-    setCredits(newCredits);
-    alert(`Bought 1 ${symbol}`);
-  };
-
-  const sell = (index) => {
-    const symbol = credits[index].symbol;
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Please login first");
-
-    const newCredits = [...credits];
-    if (newCredits[index].owned > 0) newCredits[index].owned -= 1;
-    setCredits(newCredits);
-    alert(`Sold 1 ${symbol}`);
-  };
+    const res = await fetch("/api/certificates/buy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ certificateId: id, qty: 1 }),
+    });
+    const data = await res.json();
+    if (!res.ok) setMsg(data.error || "Error");
+    else {
+      setMsg(data.message || "Bought");
+      // refresh list to show updated credits
+      fetch("/api/certificates").then(r => r.json()).then(setCerts);
+    }
+  }
 
   return (
     <div>
       <h1>Market</h1>
+      <p>{msg}</p>
       <table>
         <thead>
-          <tr>
-            <th>Symbol</th>
-            <th>Price</th>
-            <th>Owned</th>
-            <th>Actions</th>
-          </tr>
+          <tr><th>Project</th><th>Issuer</th><th>Credits</th><th>Price</th><th>Action</th></tr>
         </thead>
         <tbody>
-          {credits.map((c, i) => (
-            <tr key={c.symbol}>
-              <td>{c.symbol}</td>
+          {certs.map(c => (
+            <tr key={c._id}>
+              <td>{c.projectName}</td>
+              <td>{c.issuedBy}</td>
+              <td>{c.credits}</td>
               <td>{c.price}</td>
-              <td>{c.owned}</td>
-              <td>
-                <button onClick={() => buy(i)}>Buy</button>
-                <button onClick={() => sell(i)}>Sell</button>
-              </td>
+              <td><button onClick={() => buy(c._id)}>Buy 1</button></td>
             </tr>
           ))}
         </tbody>

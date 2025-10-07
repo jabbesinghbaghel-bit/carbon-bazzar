@@ -1,17 +1,16 @@
-// app/layout.js
+import "./globals.css";
+import Providers from "./providers";
+
 export const metadata = {
   title: "Carbon Bazzar",
-  description: "Your carbon trading marketplace",
+  description: "Next.js Project with Authentication",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <header>
-          <h1>🌍 Carbon Bazzar</h1>
-        </header>
-        <main>{children}</main>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
