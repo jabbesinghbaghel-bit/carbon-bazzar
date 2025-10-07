@@ -1,5 +1,5 @@
 // app/api/transactions/route.js
-"use server";
+export const dynamic = "force-dynamic";
 
 import clientPromise from "@/lib/mongodb";
 import getUserFromToken from "@/lib/getUserFromToken";
