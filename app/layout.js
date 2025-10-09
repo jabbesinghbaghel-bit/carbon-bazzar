@@ -1,6 +1,7 @@
 import "./globals.css";
 import Providers from "./providers";
 
+
 export const metadata = {
   title: "Carbon Bazzar",
   description: "Next.js Project with Authentication",
