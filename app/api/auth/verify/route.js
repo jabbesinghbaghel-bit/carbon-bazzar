@@ -1,8 +1,8 @@
 "use server";
-export const dynamic = "force-dynamic";
+
+export const dynamic = "force-dynamic"; // Important for Vercel dynamic routes
 
 import clientPromise from "@/lib/mongodb";
-import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
@@ -10,7 +10,7 @@ export async function GET(req) {
     const token = url.searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json({ error: "Invalid verification link." }, { status: 400 });
+      return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-error`);
     }
 
     const client = await clientPromise;
@@ -18,19 +18,21 @@ export async function GET(req) {
     const users = db.collection("users");
 
     const user = await users.findOne({ verificationToken: token });
+
     if (!user) {
-      return NextResponse.json({ error: "Invalid or expired token." }, { status: 400 });
+      return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-error`);
     }
 
+    // Mark as verified
     await users.updateOne(
       { _id: user._id },
       { $set: { verified: true }, $unset: { verificationToken: "" } }
     );
 
-    // You can redirect the user to a confirmation page; here we return a simple message.
-    return NextResponse.json({ message: "Email verified successfully. You can now log in." }, { status: 200 });
+    // Redirect to success page
+    return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verified-success`);
   } catch (error) {
-    console.error("Verify error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Verification error:", error);
+    return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-error`);
   }
 }
