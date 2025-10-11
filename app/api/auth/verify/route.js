@@ -1,6 +1,6 @@
 "use server";
 
-export const dynamic = "force-dynamic"; // Important for Vercel dynamic routes
+export const dynamic = "force-dynamic"; // Required for Vercel deployment
 
 import clientPromise from "@/lib/mongodb";
 
@@ -23,13 +23,13 @@ export async function GET(req) {
       return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-error`);
     }
 
-    // Mark as verified
+    // ✅ Mark user as verified and clear the token
     await users.updateOne(
       { _id: user._id },
       { $set: { verified: true }, $unset: { verificationToken: "" } }
     );
 
-    // Redirect to success page
+    // ✅ Redirect to success page
     return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verified-success`);
   } catch (error) {
     console.error("Verification error:", error);

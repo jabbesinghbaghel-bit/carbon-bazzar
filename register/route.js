@@ -6,9 +6,10 @@ import { randomBytes } from "crypto";
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
+// Remove top-level exports like dynamic — define inside the async function
 export async function POST(req) {
   try {
-    // Dynamic route enforcement (inside the function)
+    // Force dynamic behavior inside handler
     const dynamic = "force-dynamic";
 
     const { email, password } = await req.json();
@@ -39,7 +40,7 @@ export async function POST(req) {
 
     const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${verificationToken}`;
 
-    // Initialize Resend **inside** async function
+    // Initialize Resend client inside the function
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     await resend.emails.send({
@@ -57,10 +58,7 @@ export async function POST(req) {
       `,
     });
 
-    return NextResponse.json(
-      { message: "User registered. Check your email for verification." },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "User registered. Check your email for verification." }, { status: 200 });
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
