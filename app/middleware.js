@@ -1,29 +1,32 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-export function middleware(req) {
-  const token = req.cookies.get("token")?.value;
-  const url = req.nextUrl.clone();
+// Protect paths starting with /dashboard
+export async function middleware(req) {
+  const { pathname } = req.nextUrl;
 
-  // If user attempts to access dashboard and token missing/invalid -> redirect to login
-  if (url.pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/dashboard")) {
+    const token = req.cookies.get("token")?.value;
+
     if (!token) {
-      url.pathname = "/auth/login";
-      return NextResponse.redirect(url);
+      // Redirect unauthenticated users to login
+      return NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
     try {
+      // Verify JWT
       jwt.verify(token, process.env.JWT_SECRET);
-      return NextResponse.next();
+      return NextResponse.next(); // Allow access
     } catch (err) {
-      url.pathname = "/auth/login";
-      return NextResponse.redirect(url);
+      console.error("JWT error:", err);
+      return NextResponse.redirect(new URL("/auth/login", req.url));
     }
   }
 
-  return NextResponse.next();
+  return NextResponse.next(); // Allow other routes
 }
 
+// Apply middleware only for /dashboard
 export const config = {
   matcher: ["/dashboard/:path*"],
 };

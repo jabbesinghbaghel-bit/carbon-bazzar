@@ -10,32 +10,19 @@ export async function POST(req) {
   try {
     const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password required." }, { status: 400 });
-    }
-
     const client = await clientPromise;
     const db = client.db("carbon-bazzar");
     const users = db.collection("users");
 
     const user = await users.findOne({ email });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    if (!user.verified) {
-      return NextResponse.json({ error: "Please verify your email before logging in." }, { status: 403 });
-    }
+    if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
+    if (!user.verified) return NextResponse.json({ error: "Please verify your email." }, { status: 403 });
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
-    }
+    if (!isPasswordValid) return NextResponse.json({ error: "Invalid password." }, { status: 401 });
 
-    // Generate JWT
-    const token = jwt.sign({ userId: user._id.toString(), email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    // Store token in HTTP-only cookie
     cookies().set({
       name: "token",
       value: token,
@@ -43,12 +30,12 @@ export async function POST(req) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
-    return NextResponse.json({ message: "Login successful" }, { status: 200 });
+    return NextResponse.json({ message: "Login successful." }, { status: 200 });
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
