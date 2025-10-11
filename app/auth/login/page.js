@@ -9,11 +9,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setShowResend(false);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -29,6 +32,11 @@ export default function LoginPage() {
         setTimeout(() => router.push("/dashboard"), 800);
       } else {
         setMessage(`⚠️ ${data.error || "Login failed."}`);
+
+        // If account not verified, show resend option
+        if (data.error && data.error.toLowerCase().includes("verify")) {
+          setShowResend(true);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -38,10 +46,35 @@ export default function LoginPage() {
     }
   };
 
+  const handleResend = async () => {
+    if (!email) {
+      setMessage("⚠️ Please enter your email first.");
+      return;
+    }
+
+    try {
+      setResending(true);
+      const res = await fetch("/api/auth/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      setMessage(`📩 ${data.message || "Verification email sent!"}`);
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Failed to resend email.");
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#070809] text-white p-6">
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4">Login</h1>
+
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <input
             type="email"
@@ -66,8 +99,19 @@ export default function LoginPage() {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
-          {message && <p className="text-sm mt-2 text-gray-300">{message}</p>}
         </form>
+
+        {message && <p className="text-sm mt-3 text-gray-300">{message}</p>}
+
+        {showResend && (
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="mt-3 text-green-400 underline hover:text-green-300 transition"
+          >
+            {resending ? "Sending..." : "Resend verification email"}
+          </button>
+        )}
       </div>
     </main>
   );
