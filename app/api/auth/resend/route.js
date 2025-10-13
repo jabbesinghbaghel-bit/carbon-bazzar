@@ -2,34 +2,60 @@
 
 import clientPromise from "@/lib/mongodb";
 import { Resend } from "resend";
-import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
     const { email } = await req.json();
-    if (!email) return NextResponse.json({ error: "Email is required." }, { status: 400 });
+    if (!email) {
+      return new Response(
+        JSON.stringify({ error: "Email is required." }),
+        { status: 400 }
+      );
+    }
 
+    // connect to MongoDB
     const client = await clientPromise;
     const db = client.db("carbon-bazzar");
-    const users = db.collection("users");
 
-    const user = await users.findOne({ email });
-    if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
+    const user = await db.collection("users").findOne({ email });
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "User not found." }),
+        { status: 404 }
+      );
+    }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // generate new verification token
+    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${user.verificationToken}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${token}`;
 
+    // send verification email
     await resend.emails.send({
-      from: "Carbon Bazzar <no-reply@carbonbazzar.com>",
+      from: "no-reply@carbonbazzar.com",
       to: email,
-      subject: "Your verification link",
-      html: `<p>Click to verify: <a href="${verificationUrl}">Verify Email</a></p>`
+      subject: "Verify your Carbon Bazzar account",
+      html: `
+        <p>Hello,</p>
+        <p>Please verify your account by clicking the link below:</p>
+        <a href="${verifyUrl}">${verifyUrl}</a>
+        <p>This link will expire in 1 hour.</p>
+      `,
     });
 
-    return NextResponse.json({ message: "Verification email resent." });
-  } catch (err) {
-    console.error("Resend error:", err);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return new Response(
+      JSON.stringify({ success: true, message: "Verification email resent." }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Resend error:", error);
+    return new Response(
+      JSON.stringify({ error: "Something went wrong." }),
+      { status: 500 }
+    );
   }
 }

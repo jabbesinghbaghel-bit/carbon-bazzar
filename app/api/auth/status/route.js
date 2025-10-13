@@ -1,17 +1,18 @@
 "use server";
-
+import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
-export async function GET(req) {
-  const token = req.cookies.get("token")?.value;
+export async function GET() {
+  const dynamic = "force-dynamic";
 
-  if (!token) return NextResponse.json({ user: null });
+  const token = cookies().get("token")?.value;
+  if (!token) return NextResponse.json({ loggedIn: false });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return NextResponse.json({ user: { email: decoded.email } });
-  } catch (err) {
-    return NextResponse.json({ user: null });
+    jwt.verify(token, process.env.JWT_SECRET);
+    return NextResponse.json({ loggedIn: true });
+  } catch {
+    return NextResponse.json({ loggedIn: false });
   }
 }

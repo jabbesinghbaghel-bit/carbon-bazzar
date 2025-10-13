@@ -1,87 +1,49 @@
 "use client";
-import { useState } from "react";
-import Navbar from "../components/navbar";
 
-export default function LoginPage() {
+import { useState } from "react";
+
+export default function ResendVerification() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleResend = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+    const res = await fetch("/api/auth/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage("✅ Login successful!");
-        // Redirect to dashboard or homepage
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1000);
-      } else {
-        setMessage(`⚠️ ${data.error}`);
-      }
-    } catch (error) {
-      setMessage("❌ Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
+    const data = await res.json();
+    setMessage(data.message || data.error);
+    setLoading(false);
   };
 
   return (
-    <main>
-      <Navbar />
-      <section className="flex flex-col items-center justify-center min-h-[70vh]">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4 text-white">Welcome Back</h2>
-          <p className="text-gray-300 mb-6">Login to your Carbon Bazzar account</p>
-
-          <form onSubmit={handleLogin} className="flex flex-col items-center gap-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
-              required
-              className="px-3 py-2 rounded-md border border-gray-600 bg-transparent text-white w-64"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              className="px-3 py-2 rounded-md border border-gray-600 bg-transparent text-white w-64"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg transition disabled:opacity-50"
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-            {message && (
-              <p
-                className={`text-sm mt-2 ${
-                  message.startsWith("✅") ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {message}
-              </p>
-            )}
-          </form>
-        </div>
-      </section>
-    </main>
+    <div className="bg-gray-900 text-white p-6 rounded-xl shadow-md w-full max-w-md mx-auto mt-8">
+      <h2 className="text-xl font-semibold mb-4">Resend Verification Email</h2>
+      <form onSubmit={handleResend}>
+        <input
+          type="email"
+          placeholder="Enter your registered email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-2 mb-4 rounded bg-gray-800 border border-gray-700 text-white"
+          required
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-green-600 hover:bg-green-700 w-full p-2 rounded text-white font-medium"
+        >
+          {loading ? "Sending..." : "Resend Email"}
+        </button>
+      </form>
+      {message && <p className="mt-4 text-sm text-gray-300">{message}</p>}
+    </div>
   );
 }
