@@ -21,7 +21,8 @@ export default function Navbar() {
     }
   };
 
-  return (
+return (
+  <>
     <nav className="bg-[#0B0D17] border-b border-gray-800 px-6 py-3 flex items-center justify-between">
       {/* Left - Logo + Name */}
       <div className="flex items-center gap-2">
@@ -103,5 +104,9 @@ export default function Navbar() {
         )}
       </div>
     </nav>
-  );
+    <a href="/dashboard" className="text-gray-300 hover:text-white">
+      Dashboard
+    </a>
+  </>
+);
 }
