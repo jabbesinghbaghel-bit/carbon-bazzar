@@ -1,14 +1,20 @@
+
 import clientPromise from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 
-export const dynamic = "force-dynamic"; // prevents Vercel from pre-rendering
+export const dynamic = "force-dynamic"; // ensures Vercel doesn't pre-render
 
 export async function GET(req) {
   try {
     // 1️⃣ Get token from Authorization header
-    const token = req.headers.get("authorization")?.split(" ")[1];
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized: No token provided" }, { status: 401 });
+    }
+
+    const token = authHeader.split(" ")[1];
     if (!token) {
       return NextResponse.json({ error: "Unauthorized: No token provided" }, { status: 401 });
     }
@@ -22,7 +28,7 @@ export async function GET(req) {
     }
 
     const userId = decoded.id || decoded._id || decoded.userId;
-    if (!userId) {
+    if (!userId || !ObjectId.isValid(userId)) {
       return NextResponse.json({ error: "Invalid token payload" }, { status: 400 });
     }
 
@@ -30,18 +36,12 @@ export async function GET(req) {
     const client = await clientPromise;
     const db = client.db("carbon-bazzar");
 
-    // 4️⃣ Validate ObjectId
-    if (!ObjectId.isValid(userId)) {
-      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
-    }
-
     const user = await db.collection("users").findOne({ _id: new ObjectId(userId) });
-
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 5️⃣ Return safe user info
+    // 4️⃣ Return safe user info
     return NextResponse.json({
       name: user.name || "",
       email: user.email,
@@ -50,6 +50,7 @@ export async function GET(req) {
       kycStatus: user.kycStatus || "Pending",
       phone: user.phone || "",
     });
+
   } catch (err) {
     console.error("❌ Profile fetch error:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
