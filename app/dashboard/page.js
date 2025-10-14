@@ -43,14 +43,7 @@ export default function Dashboard() {
       }
     }
 
-     fetch("/api/profile/get", {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  })
-    .then(res => res.json())
-    .then(data => setProfile(data))
-    .catch(err => setError("Failed to load profile"))
-    .finally(() => setLoading(false));
+    fetchProfile();
   }, [router]);
 
   if (loading)
